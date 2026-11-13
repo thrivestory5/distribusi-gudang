@@ -1,15 +1,5 @@
 {
   "name": "distribusigudang",
   "version": "1.0.0",
-  "description": "Sistem Manajemen Stok Gudang dan Distribusi Logistik",
-  "scripts": {
-    "start": "node local_server.js"
-  },
-  "keywords": [
-    "warehouse",
-    "gudang",
-    "distribusi",
-    "logistik"
-  ],
-  "license": "MIT"
+  "description": "Sistem Manajemen Gudang dan Distribusi"
 }
