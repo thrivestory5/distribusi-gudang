@@ -1,0 +1,19 @@
+{
+  "name": "gudang-distribusi",
+  "version": "1.0.0",
+  "description": "Aplikasi Manajemen Stok Gudang dan Distribusi Logistik dengan Armada Kendaraan & Petugas Pengirim",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "warehouse",
+    "gudang",
+    "distribusi",
+    "logistik",
+    "surat-jalan",
+    "stok"
+  ],
+  "author": "Warehouse Logistics Team",
+  "license": "MIT"
+}
