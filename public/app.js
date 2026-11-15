@@ -286,14 +286,32 @@ function initNavigation() {
   });
 }
 
+function toggleSidebar() {
+  const sidebar = document.getElementById('app-sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (sidebar) sidebar.classList.toggle('open');
+  if (overlay) overlay.classList.toggle('open');
+}
+
+function closeSidebar() {
+  const sidebar = document.getElementById('app-sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  if (sidebar) sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('open');
+}
+
 function switchTab(tabId) {
   state.currentTab = tabId;
   document.querySelectorAll('.nav-item').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
   });
+  document.querySelectorAll('.m-nav-item[data-tab]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+  });
   document.querySelectorAll('.tab-pane').forEach(pane => {
     pane.classList.toggle('active', pane.id === tabId);
   });
+  closeSidebar();
 
   const titleMap = {
     'tab-dashboard': 'Dashboard Gudang & Logistik',
@@ -539,34 +557,62 @@ function renderDistributionChart(statusStats) {
 
 function renderDashboardDistributions(list) {
   const tbody = document.getElementById('table-dashboard-dist');
-  if (!tbody) return;
+  const mobContainer = document.getElementById('mobile-dashboard-dist');
 
   if (!list || list.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><p>Belum ada aktivitas pengiriman distribusi</p></td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><p>Belum ada aktivitas pengiriman distribusi</p></td></tr>`;
+    if (mobContainer) mobContainer.innerHTML = `<div class="empty-state"><p>Belum ada aktivitas pengiriman distribusi</p></div>`;
     return;
   }
 
-  tbody.innerHTML = list.map(item => `
-    <tr>
-      <td><strong style="color: var(--primary);">${item.dist_code}</strong></td>
-      <td>${item.dist_date}</td>
-      <td><strong>${escapeHtml(item.destination_name)}</strong></td>
-      <td><span class="badge badge-secondary" style="font-weight: 700; letter-spacing: 0.5px;">${escapeHtml(item.vehicle_plate)}</span></td>
-      <td>${escapeHtml(item.officer_name)}</td>
-      <td><span class="badge badge-info">${item.total_items} item</span></td>
-      <td>${getStatusBadge(item.status)}</td>
-      <td>
-        <button class="btn btn-secondary btn-sm" onclick="viewDistributionDetail(${item.id})">
-          Surat Jalan
-        </button>
-      </td>
-    </tr>
-  `).join('');
+  if (tbody) {
+    tbody.innerHTML = list.map(item => `
+      <tr>
+        <td><strong style="color: var(--primary);">${item.dist_code}</strong></td>
+        <td>${item.dist_date}</td>
+        <td><strong>${escapeHtml(item.destination_name)}</strong></td>
+        <td><span class="badge badge-secondary" style="font-weight: 700; letter-spacing: 0.5px;">${escapeHtml(item.vehicle_plate)}</span></td>
+        <td>${escapeHtml(item.officer_name)}</td>
+        <td><span class="badge badge-info">${item.total_items} item</span></td>
+        <td>${getStatusBadge(item.status)}</td>
+        <td>
+          <button class="btn btn-secondary btn-sm" onclick="viewDistributionDetail(${item.id})">
+            Surat Jalan
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  if (mobContainer) {
+    mobContainer.innerHTML = list.map(item => `
+      <div class="mobile-card">
+        <div class="m-card-header">
+          <span class="m-code-badge">${item.dist_code}</span>
+          ${getStatusBadge(item.status)}
+        </div>
+        <div class="m-dist-destination">
+          <div class="m-dest-name">${escapeHtml(item.destination_name)}</div>
+          <div class="m-dest-address">Tgl Kirim: <strong>${item.dist_date}</strong></div>
+        </div>
+        <div class="m-fleet-badge-row">
+          <span class="m-plate-badge">${escapeHtml(item.vehicle_plate)}</span>
+          <span class="m-officer-info">👤 ${escapeHtml(item.officer_name)}</span>
+          <span class="m-tag">📦 ${item.total_items} item</span>
+        </div>
+        <div class="m-card-actions">
+          <button class="btn btn-secondary btn-sm" onclick="viewDistributionDetail(${item.id})">
+            📄 Surat Jalan
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
 }
 
 async function loadDashboardLowStock() {
   const tbody = document.getElementById('table-dashboard-low-stock');
-  if (!tbody) return;
+  const mobContainer = document.getElementById('mobile-dashboard-low-stock');
 
   const res = await fetchAPI('/api/items?status=menipis');
   const outRes = await fetchAPI('/api/items?status=habis');
@@ -576,26 +622,61 @@ async function loadDashboardLowStock() {
   if (outRes.success) combined = combined.concat(outRes.data);
 
   if (combined.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--success); font-weight: 600;">Semua stok barang berada pada level aman (&gt; stok minimum).</td></tr>`;
+    const emptyMsg = `Semua stok barang berada pada level aman (&gt; stok minimum).`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--success); font-weight: 600;">${emptyMsg}</td></tr>`;
+    if (mobContainer) mobContainer.innerHTML = `<div style="text-align:center; padding:16px; color:var(--success); font-weight:600; font-size:13px; background:#f0fdf4; border-radius:var(--radius-md); border:1px solid #bbf7d0;">${emptyMsg}</div>`;
     return;
   }
 
-  tbody.innerHTML = combined.slice(0, 5).map(item => `
-    <tr>
-      <td><strong>${escapeHtml(item.sku)}</strong></td>
-      <td>${escapeHtml(item.name)}</td>
-      <td>${escapeHtml(item.category)}</td>
-      <td>${escapeHtml(item.location || '-')}</td>
-      <td><strong style="color: ${item.stock === 0 ? 'var(--danger)' : 'var(--warning)'}; font-size: 15px;">${item.stock} ${item.unit}</strong></td>
-      <td>${item.min_stock} ${item.unit}</td>
-      <td>${getItemStatusBadge(item.stock, item.min_stock)}</td>
-      <td>
+  const topLow = combined.slice(0, 5);
+
+  if (tbody) {
+    tbody.innerHTML = topLow.map(item => `
+      <tr>
+        <td><strong>${escapeHtml(item.sku)}</strong></td>
+        <td>${escapeHtml(item.name)}</td>
+        <td>${escapeHtml(item.category)}</td>
+        <td>${escapeHtml(item.location || '-')}</td>
+        <td><strong style="color: ${item.stock === 0 ? 'var(--danger)' : 'var(--warning)'}; font-size: 15px;">${item.stock} ${item.unit}</strong></td>
+        <td>${item.min_stock} ${item.unit}</td>
+        <td>${getItemStatusBadge(item.stock, item.min_stock)}</td>
+        <td>
+          <button class="btn btn-success btn-sm" onclick="openRestockModal(${item.id})">
+            + Restock
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  if (mobContainer) {
+    mobContainer.innerHTML = topLow.map(item => `
+      <div class="mobile-card" style="border-left: 4px solid ${item.stock === 0 ? 'var(--danger)' : 'var(--warning)'};">
+        <div class="m-card-header">
+          <span class="m-code-badge">${escapeHtml(item.sku)}</span>
+          ${getItemStatusBadge(item.stock, item.min_stock)}
+        </div>
+        <div class="m-title">${escapeHtml(item.name)}</div>
+        <div class="m-stats-grid">
+          <div class="m-stat-item">
+            <span class="m-stat-label">Sisa Stok</span>
+            <span class="m-stat-value ${item.stock === 0 ? 'danger' : 'warning'}">${item.stock} ${item.unit}</span>
+          </div>
+          <div class="m-stat-item">
+            <span class="m-stat-label">Batas Min</span>
+            <span class="m-stat-value">${item.min_stock} ${item.unit}</span>
+          </div>
+          <div class="m-stat-item">
+            <span class="m-stat-label">Lokasi</span>
+            <span class="m-stat-value" style="font-size:12px;">${escapeHtml(item.location || '-')}</span>
+          </div>
+        </div>
         <button class="btn btn-success btn-sm" onclick="openRestockModal(${item.id})">
-          + Restock
+          + Restock Sekarang
         </button>
-      </td>
-    </tr>
-  `).join('');
+      </div>
+    `).join('');
+  }
 }
 
 // ============================================================================
@@ -604,7 +685,8 @@ async function loadDashboardLowStock() {
 
 async function loadItems() {
   const tbody = document.getElementById('table-items-body');
-  if (!tbody) return;
+  const mobContainer = document.getElementById('mobile-items-cards');
+  if (!tbody && !mobContainer) return;
 
   const search = document.getElementById('filter-item-search')?.value || '';
   const category = document.getElementById('filter-item-category')?.value || '';
@@ -621,55 +703,98 @@ async function loadItems() {
   state.items = res.data;
 
   if (state.items.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="9" class="empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-          <h4>Tidak Ada Data Barang</h4>
-          <p>Barang tidak ditemukan atau belum ditambahkan ke sistem gudang.</p>
-          <button class="btn btn-primary btn-sm" onclick="openNewItemModal()">+ Tambah Barang Baru</button>
-        </td>
-      </tr>
+    const emptyHtml = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <h4>Tidak Ada Data Barang</h4>
+        <p>Barang tidak ditemukan atau belum ditambahkan ke sistem gudang.</p>
+        <button class="btn btn-primary btn-sm" onclick="openNewItemModal()">+ Tambah Barang Baru</button>
+      </div>
     `;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="empty-state">${emptyHtml}</td></tr>`;
+    if (mobContainer) mobContainer.innerHTML = emptyHtml;
     return;
   }
 
-  tbody.innerHTML = state.items.map(item => `
-    <tr>
-      <td><strong style="font-family: monospace; font-size: 12.5px;">${escapeHtml(item.sku)}</strong></td>
-      <td>
-        <div style="font-weight: 600;">${escapeHtml(item.name)}</div>
-        <div style="font-size: 11.5px; color: var(--text-muted);">${escapeHtml(item.notes || '')}</div>
-      </td>
-      <td><span class="badge badge-secondary">${escapeHtml(item.category)}</span></td>
-      <td>${escapeHtml(item.location || '-')}</td>
-      <td>
-        <strong style="font-size: 15px; color: ${item.stock === 0 ? 'var(--danger)' : item.stock <= item.min_stock ? 'var(--warning)' : 'var(--text-main)'};">
-          ${formatNumber(item.stock)}
-        </strong> 
-        <span style="font-size: 12px; color: var(--text-muted);">${item.unit}</span>
-      </td>
-      <td>${item.min_stock} ${item.unit}</td>
-      <td>${formatRupiah(item.unit_price)}</td>
-      <td>${getItemStatusBadge(item.stock, item.min_stock)}</td>
-      <td>
-        <div class="table-actions">
-          <button class="btn btn-success btn-sm" title="Restock Stok Masuk" onclick="openRestockModal(${item.id})">
-            + Restock
-          </button>
-          <button class="btn btn-secondary btn-sm" title="Opname / Koreksi Fisik" onclick="openOpnameModal(${item.id})">
-            Opname
-          </button>
-          <button class="btn btn-secondary btn-sm" title="Edit Barang" onclick="openEditItemModal(${item.id})">
-            Edit
-          </button>
-          <button class="btn btn-outline-danger btn-sm" title="Hapus Barang" onclick="deleteItem(${item.id}, '${escapeHtml(item.name)}')">
-            &times;
-          </button>
+  if (tbody) {
+    tbody.innerHTML = state.items.map(item => `
+      <tr>
+        <td><strong style="font-family: monospace; font-size: 12.5px;">${escapeHtml(item.sku)}</strong></td>
+        <td>
+          <div style="font-weight: 600;">${escapeHtml(item.name)}</div>
+          <div style="font-size: 11.5px; color: var(--text-muted);">${escapeHtml(item.notes || '')}</div>
+        </td>
+        <td><span class="badge badge-secondary">${escapeHtml(item.category)}</span></td>
+        <td>${escapeHtml(item.location || '-')}</td>
+        <td>
+          <strong style="font-size: 15px; color: ${item.stock === 0 ? 'var(--danger)' : item.stock <= item.min_stock ? 'var(--warning)' : 'var(--text-main)'};">
+            ${formatNumber(item.stock)}
+          </strong> 
+          <span style="font-size: 12px; color: var(--text-muted);">${item.unit}</span>
+        </td>
+        <td>${item.min_stock} ${item.unit}</td>
+        <td>${formatRupiah(item.unit_price)}</td>
+        <td>${getItemStatusBadge(item.stock, item.min_stock)}</td>
+        <td>
+          <div class="table-actions">
+            <button class="btn btn-success btn-sm" title="Restock Stok Masuk" onclick="openRestockModal(${item.id})">
+              + Restock
+            </button>
+            <button class="btn btn-secondary btn-sm" title="Opname / Koreksi Fisik" onclick="openOpnameModal(${item.id})">
+              Opname
+            </button>
+            <button class="btn btn-secondary btn-sm" title="Edit Barang" onclick="openEditItemModal(${item.id})">
+              Edit
+            </button>
+            <button class="btn btn-outline-danger btn-sm" title="Hapus Barang" onclick="deleteItem(${item.id}, '${escapeHtml(item.name)}')">
+              &times;
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  if (mobContainer) {
+    mobContainer.innerHTML = state.items.map(item => `
+      <div class="mobile-card" style="border-left: 4px solid ${item.stock === 0 ? 'var(--danger)' : item.stock <= item.min_stock ? 'var(--warning)' : 'var(--primary)'};">
+        <div class="m-card-header">
+          <span class="m-code-badge">${escapeHtml(item.sku)}</span>
+          ${getItemStatusBadge(item.stock, item.min_stock)}
         </div>
-      </td>
-    </tr>
-  `).join('');
+        <div>
+          <div class="m-title">${escapeHtml(item.name)}</div>
+          <div class="m-meta-tags" style="margin-top: 4px;">
+            <span class="m-tag">🏷️ ${escapeHtml(item.category)}</span>
+            <span class="m-tag">📍 Rak: ${escapeHtml(item.location || '-')}</span>
+            <span class="m-tag">💰 ${formatRupiah(item.unit_price)}</span>
+          </div>
+        </div>
+        <div class="m-stats-grid">
+          <div class="m-stat-item">
+            <span class="m-stat-label">Stok Fisik</span>
+            <span class="m-stat-value ${item.stock === 0 ? 'danger' : item.stock <= item.min_stock ? 'warning' : 'primary'}">
+              ${formatNumber(item.stock)} <small style="font-size:10px; font-weight:normal;">${item.unit}</small>
+            </span>
+          </div>
+          <div class="m-stat-item">
+            <span class="m-stat-label">Min. Buffer</span>
+            <span class="m-stat-value">${item.min_stock} <small style="font-size:10px; font-weight:normal;">${item.unit}</small></span>
+          </div>
+          <div class="m-stat-item">
+            <span class="m-stat-label">Total Nilai</span>
+            <span class="m-stat-value" style="font-size:11px;">${formatRupiah(item.stock * item.unit_price)}</span>
+          </div>
+        </div>
+        <div class="m-card-actions">
+          <button class="btn btn-success btn-sm" onclick="openRestockModal(${item.id})">+ Restock</button>
+          <button class="btn btn-secondary btn-sm" onclick="openOpnameModal(${item.id})">Opname</button>
+          <button class="btn btn-secondary btn-sm" onclick="openEditItemModal(${item.id})">Edit</button>
+          <button class="btn btn-outline-danger btn-sm" onclick="deleteItem(${item.id}, '${escapeHtml(item.name)}')">Hapus</button>
+        </div>
+      </div>
+    `).join('');
+  }
 }
 
 function getItemStatusBadge(stock, minStock) {
@@ -684,7 +809,8 @@ function getItemStatusBadge(stock, minStock) {
 
 async function loadDistributions() {
   const tbody = document.getElementById('table-distributions-body');
-  if (!tbody) return;
+  const mobContainer = document.getElementById('mobile-distributions-cards');
+  if (!tbody && !mobContainer) return;
 
   const search = document.getElementById('filter-dist-search')?.value || '';
   const status = document.getElementById('filter-dist-status')?.value || '';
@@ -699,59 +825,99 @@ async function loadDistributions() {
   state.distributions = res.data;
 
   if (state.distributions.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="9" class="empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-          <h4>Belum Ada Data Distribusi</h4>
-          <p>Belum ada surat jalan atau transaksi pengiriman barang yang dicatat.</p>
-          <button class="btn btn-primary btn-sm" onclick="openNewDistributionModal()">+ Buat Distribusi Baru</button>
-        </td>
-      </tr>
+    const emptyHtml = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+        <h4>Belum Ada Data Distribusi</h4>
+        <p>Belum ada surat jalan atau transaksi pengiriman barang yang dicatat.</p>
+        <button class="btn btn-primary btn-sm" onclick="openNewDistributionModal()">+ Buat Distribusi Baru</button>
+      </div>
     `;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="empty-state">${emptyHtml}</td></tr>`;
+    if (mobContainer) mobContainer.innerHTML = emptyHtml;
     return;
   }
 
-  tbody.innerHTML = state.distributions.map(dist => `
-    <tr>
-      <td>
-        <strong style="color: var(--primary); font-family: monospace; font-size: 13px;">${dist.dist_code}</strong>
-      </td>
-      <td style="white-space: nowrap;">${dist.dist_date}</td>
-      <td>
-        <div style="font-weight: 600;">${escapeHtml(dist.destination_name)}</div>
-        <div style="font-size: 11.5px; color: var(--text-muted); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-          ${escapeHtml(dist.destination_address || '-')}
+  if (tbody) {
+    tbody.innerHTML = state.distributions.map(dist => `
+      <tr>
+        <td>
+          <strong style="color: var(--primary); font-family: monospace; font-size: 13px;">${dist.dist_code}</strong>
+        </td>
+        <td style="white-space: nowrap;">${dist.dist_date}</td>
+        <td>
+          <div style="font-weight: 600;">${escapeHtml(dist.destination_name)}</div>
+          <div style="font-size: 11.5px; color: var(--text-muted); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            ${escapeHtml(dist.destination_address || '-')}
+          </div>
+        </td>
+        <td>
+          <span class="badge badge-secondary" style="font-weight: 700; font-size: 12px; letter-spacing: 0.5px;">
+            ${escapeHtml(dist.vehicle_plate)}
+          </span>
+        </td>
+        <td>
+          <div style="font-weight: 500;">${escapeHtml(dist.officer_name)}</div>
+          <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(dist.officer_phone || '')}</div>
+        </td>
+        <td>
+          <span class="badge badge-info">${dist.total_items} Jenis Item</span>
+        </td>
+        <td>${getStatusBadge(dist.status)}</td>
+        <td style="font-size: 12px; color: var(--text-muted); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          ${escapeHtml(dist.notes || '-')}
+        </td>
+        <td>
+          <div class="table-actions">
+            <button class="btn btn-primary btn-sm" onclick="viewDistributionDetail(${dist.id})">
+              Surat Jalan
+            </button>
+            <button class="btn btn-outline-danger btn-sm" title="Hapus / Batalkan" onclick="deleteDistribution(${dist.id}, '${dist.dist_code}')">
+              &times;
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  if (mobContainer) {
+    mobContainer.innerHTML = state.distributions.map(dist => `
+      <div class="mobile-card">
+        <div class="m-card-header">
+          <span class="m-code-badge">${dist.dist_code}</span>
+          ${getStatusBadge(dist.status)}
         </div>
-      </td>
-      <td>
-        <span class="badge badge-secondary" style="font-weight: 700; font-size: 12px; letter-spacing: 0.5px;">
-          ${escapeHtml(dist.vehicle_plate)}
-        </span>
-      </td>
-      <td>
-        <div style="font-weight: 500;">${escapeHtml(dist.officer_name)}</div>
-        <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(dist.officer_phone || '')}</div>
-      </td>
-      <td>
-        <span class="badge badge-info">${dist.total_items} Jenis Item</span>
-      </td>
-      <td>${getStatusBadge(dist.status)}</td>
-      <td style="font-size: 12px; color: var(--text-muted); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-        ${escapeHtml(dist.notes || '-')}
-      </td>
-      <td>
-        <div class="table-actions">
+        <div class="m-dist-destination">
+          <div class="m-dest-name">${escapeHtml(dist.destination_name)}</div>
+          <div class="m-dest-address">${escapeHtml(dist.destination_address || '-')}</div>
+        </div>
+        <div class="m-fleet-badge-row">
+          <span class="m-plate-badge">${escapeHtml(dist.vehicle_plate)}</span>
+          <span class="m-officer-info">👤 ${escapeHtml(dist.officer_name)}</span>
+        </div>
+        <div class="m-stats-grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="m-stat-item">
+            <span class="m-stat-label">Tanggal Kirim</span>
+            <span class="m-stat-value" style="font-size:12.5px;">${dist.dist_date}</span>
+          </div>
+          <div class="m-stat-item">
+            <span class="m-stat-label">Jumlah Muatan</span>
+            <span class="m-stat-value primary">${dist.total_items} Jenis Item</span>
+          </div>
+        </div>
+        ${dist.notes ? `<div style="font-size:11.5px; color:var(--text-muted); background:#f8fafc; padding:6px 10px; border-radius:var(--radius-sm); border-left:2px solid var(--primary);">Catatan: ${escapeHtml(dist.notes)}</div>` : ''}
+        <div class="m-card-actions">
           <button class="btn btn-primary btn-sm" onclick="viewDistributionDetail(${dist.id})">
-            Surat Jalan
+            📄 Lihat Surat Jalan
           </button>
-          <button class="btn btn-outline-danger btn-sm" title="Hapus / Batalkan" onclick="deleteDistribution(${dist.id}, '${dist.dist_code}')">
-            &times;
+          <button class="btn btn-outline-danger btn-sm" onclick="deleteDistribution(${dist.id}, '${dist.dist_code}')">
+            Batalkan
           </button>
         </div>
-      </td>
-    </tr>
-  `).join('');
+      </div>
+    `).join('');
+  }
 }
 
 function getStatusBadge(status) {
@@ -768,52 +934,104 @@ function getStatusBadge(status) {
 
 async function loadFleet() {
   const vehTbody = document.getElementById('table-vehicles-body');
-  if (vehTbody) {
+  const mobVehContainer = document.getElementById('mobile-vehicles-cards');
+  if (vehTbody || mobVehContainer) {
     const res = await fetchAPI('/api/vehicles');
     if (res.success) {
       state.vehicles = res.data;
       if (state.vehicles.length === 0) {
-        vehTbody.innerHTML = `<tr><td colspan="6" class="text-center py-4">Belum ada armada kendaraan terdaftar.</td></tr>`;
+        if (vehTbody) vehTbody.innerHTML = `<tr><td colspan="6" class="text-center py-4">Belum ada armada kendaraan terdaftar.</td></tr>`;
+        if (mobVehContainer) mobVehContainer.innerHTML = `<div class="empty-state"><p>Belum ada armada kendaraan terdaftar.</p></div>`;
       } else {
-        vehTbody.innerHTML = state.vehicles.map(v => `
-          <tr>
-            <td><strong style="color: var(--primary); font-family: monospace;">${escapeHtml(v.plate_number)}</strong></td>
-            <td>${escapeHtml(v.vehicle_type)}</td>
-            <td>${escapeHtml(v.brand_model || '-')}</td>
-            <td>${escapeHtml(v.capacity || '-')}</td>
-            <td>${escapeHtml(v.driver_default || '-')}</td>
-            <td>
-              <button class="btn btn-outline-danger btn-sm" onclick="deleteVehicle(${v.id}, '${escapeHtml(v.plate_number)}')">
-                Hapus
-              </button>
-            </td>
-          </tr>
-        `).join('');
+        if (vehTbody) {
+          vehTbody.innerHTML = state.vehicles.map(v => `
+            <tr>
+              <td><strong style="color: var(--primary); font-family: monospace;">${escapeHtml(v.plate_number)}</strong></td>
+              <td>${escapeHtml(v.vehicle_type)}</td>
+              <td>${escapeHtml(v.brand_model || '-')}</td>
+              <td>${escapeHtml(v.capacity || '-')}</td>
+              <td>${escapeHtml(v.driver_default || '-')}</td>
+              <td>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteVehicle(${v.id}, '${escapeHtml(v.plate_number)}')">
+                  Hapus
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+        if (mobVehContainer) {
+          mobVehContainer.innerHTML = state.vehicles.map(v => `
+            <div class="mobile-card">
+              <div class="m-card-header">
+                <span class="m-plate-badge" style="font-size:13px;">${escapeHtml(v.plate_number)}</span>
+                <span class="badge badge-success">Aktif</span>
+              </div>
+              <div class="m-title">${escapeHtml(v.vehicle_type)}</div>
+              <div class="m-stats-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="m-stat-item">
+                  <span class="m-stat-label">Model / Merk</span>
+                  <span class="m-stat-value" style="font-size:12px;">${escapeHtml(v.brand_model || '-')}</span>
+                </div>
+                <div class="m-stat-item">
+                  <span class="m-stat-label">Kapasitas Muatan</span>
+                  <span class="m-stat-value" style="font-size:12px;">${escapeHtml(v.capacity || '-')}</span>
+                </div>
+              </div>
+              <div style="font-size:12px; color:var(--text-muted);">
+                👤 Driver Utama: <strong>${escapeHtml(v.driver_default || '-')}</strong>
+              </div>
+              <div class="m-card-actions">
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteVehicle(${v.id}, '${escapeHtml(v.plate_number)}')">Hapus Armada</button>
+              </div>
+            </div>
+          `).join('');
+        }
       }
     }
   }
 
   const offTbody = document.getElementById('table-officers-body');
-  if (offTbody) {
+  const mobOffContainer = document.getElementById('mobile-officers-cards');
+  if (offTbody || mobOffContainer) {
     const res = await fetchAPI('/api/officers');
     if (res.success) {
       state.officers = res.data;
       if (state.officers.length === 0) {
-        offTbody.innerHTML = `<tr><td colspan="5" class="text-center py-4">Belum ada petugas terdaftar.</td></tr>`;
+        if (offTbody) offTbody.innerHTML = `<tr><td colspan="5" class="text-center py-4">Belum ada petugas terdaftar.</td></tr>`;
+        if (mobOffContainer) mobOffContainer.innerHTML = `<div class="empty-state"><p>Belum ada petugas terdaftar.</p></div>`;
       } else {
-        offTbody.innerHTML = state.officers.map(o => `
-          <tr>
-            <td><strong>${escapeHtml(o.name)}</strong></td>
-            <td><span class="badge badge-secondary">${escapeHtml(o.role)}</span></td>
-            <td>${escapeHtml(o.phone || '-')}</td>
-            <td><span class="badge badge-success">${escapeHtml(o.status)}</span></td>
-            <td>
-              <button class="btn btn-outline-danger btn-sm" onclick="deleteOfficer(${o.id}, '${escapeHtml(o.name)}')">
-                Hapus
-              </button>
-            </td>
-          </tr>
-        `).join('');
+        if (offTbody) {
+          offTbody.innerHTML = state.officers.map(o => `
+            <tr>
+              <td><strong>${escapeHtml(o.name)}</strong></td>
+              <td><span class="badge badge-secondary">${escapeHtml(o.role)}</span></td>
+              <td>${escapeHtml(o.phone || '-')}</td>
+              <td><span class="badge badge-success">${escapeHtml(o.status)}</span></td>
+              <td>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteOfficer(${o.id}, '${escapeHtml(o.name)}')">
+                  Hapus
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+        if (mobOffContainer) {
+          mobOffContainer.innerHTML = state.officers.map(o => `
+            <div class="mobile-card">
+              <div class="m-card-header">
+                <div class="m-title">${escapeHtml(o.name)}</div>
+                <span class="badge badge-secondary">${escapeHtml(o.role)}</span>
+              </div>
+              <div class="m-meta-tags">
+                <span class="m-tag">📞 ${escapeHtml(o.phone || '-')}</span>
+                <span class="badge badge-success">${escapeHtml(o.status)}</span>
+              </div>
+              <div class="m-card-actions">
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteOfficer(${o.id}, '${escapeHtml(o.name)}')">Hapus Petugas</button>
+              </div>
+            </div>
+          `).join('');
+        }
       }
     }
   }
@@ -825,31 +1043,54 @@ async function loadFleet() {
 
 async function loadDestinations() {
   const tbody = document.getElementById('table-destinations-body');
-  if (!tbody) return;
+  const mobContainer = document.getElementById('mobile-destinations-cards');
+  if (!tbody && !mobContainer) return;
 
   const res = await fetchAPI('/api/destinations');
   if (!res.success) return;
   state.destinations = res.data;
 
   if (state.destinations.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4">Belum ada lokasi tujuan terdaftar.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4">Belum ada lokasi tujuan terdaftar.</td></tr>`;
+    if (mobContainer) mobContainer.innerHTML = `<div class="empty-state"><p>Belum ada lokasi tujuan terdaftar.</p></div>`;
     return;
   }
 
-  tbody.innerHTML = state.destinations.map(d => `
-    <tr>
-      <td><strong>${escapeHtml(d.name)}</strong></td>
-      <td>${escapeHtml(d.address)}</td>
-      <td><span class="badge badge-secondary">${escapeHtml(d.city || '-')}</span></td>
-      <td>${escapeHtml(d.contact_person || '-')}</td>
-      <td>${escapeHtml(d.phone || '-')}</td>
-      <td>
-        <button class="btn btn-outline-danger btn-sm" onclick="deleteDestination(${d.id}, '${escapeHtml(d.name)}')">
-          Hapus
-        </button>
-      </td>
-    </tr>
-  `).join('');
+  if (tbody) {
+    tbody.innerHTML = state.destinations.map(d => `
+      <tr>
+        <td><strong>${escapeHtml(d.name)}</strong></td>
+        <td>${escapeHtml(d.address)}</td>
+        <td><span class="badge badge-secondary">${escapeHtml(d.city || '-')}</span></td>
+        <td>${escapeHtml(d.contact_person || '-')}</td>
+        <td>${escapeHtml(d.phone || '-')}</td>
+        <td>
+          <button class="btn btn-outline-danger btn-sm" onclick="deleteDestination(${d.id}, '${escapeHtml(d.name)}')">
+            Hapus
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  if (mobContainer) {
+    mobContainer.innerHTML = state.destinations.map(d => `
+      <div class="mobile-card">
+        <div class="m-card-header">
+          <div class="m-title">${escapeHtml(d.name)}</div>
+          <span class="badge badge-secondary">${escapeHtml(d.city || '-')}</span>
+        </div>
+        <div class="m-dest-address">${escapeHtml(d.address)}</div>
+        <div class="m-meta-tags" style="margin-top:6px;">
+          <span class="m-tag">👤 PIC: ${escapeHtml(d.contact_person || '-')}</span>
+          <span class="m-tag">📞 ${escapeHtml(d.phone || '-')}</span>
+        </div>
+        <div class="m-card-actions">
+          <button class="btn btn-outline-danger btn-sm" onclick="deleteDestination(${d.id}, '${escapeHtml(d.name)}')">Hapus Lokasi</button>
+        </div>
+      </div>
+    `).join('');
+  }
 }
 
 // ============================================================================
@@ -858,39 +1099,86 @@ async function loadDestinations() {
 
 async function loadStockLogs() {
   const tbody = document.getElementById('table-logs-body');
-  if (!tbody) return;
+  const mobContainer = document.getElementById('mobile-logs-cards');
+  if (!tbody && !mobContainer) return;
 
   const res = await fetchAPI('/api/stock-logs');
   if (!res.success) return;
 
   if (res.data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4">Belum ada log riwayat mutasi stok.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4">Belum ada log riwayat mutasi stok.</td></tr>`;
+    if (mobContainer) mobContainer.innerHTML = `<div class="empty-state"><p>Belum ada log riwayat mutasi stok.</p></div>`;
     return;
   }
 
-  tbody.innerHTML = res.data.map(log => {
-    let typeBadge = '';
-    if (log.type === 'IN') {
-      typeBadge = `<span class="badge badge-success">+ Masuk</span>`;
-    } else if (log.type === 'OUT') {
-      typeBadge = `<span class="badge badge-danger">- Keluar</span>`;
-    } else {
-      typeBadge = `<span class="badge badge-warning">Penyesuaian</span>`;
-    }
+  if (tbody) {
+    tbody.innerHTML = res.data.map(log => {
+      let typeBadge = '';
+      if (log.type === 'IN') {
+        typeBadge = `<span class="badge badge-success">+ Masuk</span>`;
+      } else if (log.type === 'OUT') {
+        typeBadge = `<span class="badge badge-danger">- Keluar</span>`;
+      } else {
+        typeBadge = `<span class="badge badge-warning">Penyesuaian</span>`;
+      }
 
-    return `
-      <tr>
-        <td style="font-size: 12px; color: var(--text-muted);">${log.created_at}</td>
-        <td><strong>${escapeHtml(log.item_name)}</strong></td>
-        <td>${typeBadge}</td>
-        <td><strong style="font-size: 14px;">${log.type === 'OUT' ? '-' : '+'}${log.quantity}</strong></td>
-        <td>${log.previous_stock}</td>
-        <td><strong style="color: var(--primary);">${log.current_stock}</strong></td>
-        <td><span style="font-family: monospace; font-size: 11.5px; font-weight: 600;">${escapeHtml(log.reference_code || '-')}</span></td>
-        <td style="font-size: 12px; color: var(--text-muted);">${escapeHtml(log.notes || '-')}</td>
-      </tr>
-    `;
-  }).join('');
+      return `
+        <tr>
+          <td style="font-size: 12px; color: var(--text-muted);">${log.created_at}</td>
+          <td><strong>${escapeHtml(log.item_name)}</strong></td>
+          <td>${typeBadge}</td>
+          <td><strong style="font-size: 14px;">${log.type === 'OUT' ? '-' : '+'}${log.quantity}</strong></td>
+          <td>${log.previous_stock}</td>
+          <td><strong style="color: var(--primary);">${log.current_stock}</strong></td>
+          <td><span style="font-family: monospace; font-size: 11.5px; font-weight: 600;">${escapeHtml(log.reference_code || '-')}</span></td>
+          <td style="font-size: 12px; color: var(--text-muted);">${escapeHtml(log.notes || '-')}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  if (mobContainer) {
+    mobContainer.innerHTML = res.data.map(log => {
+      let typeBadge = '';
+      if (log.type === 'IN') {
+        typeBadge = `<span class="badge badge-success">+ Masuk</span>`;
+      } else if (log.type === 'OUT') {
+        typeBadge = `<span class="badge badge-danger">- Keluar</span>`;
+      } else {
+        typeBadge = `<span class="badge badge-warning">Penyesuaian</span>`;
+      }
+
+      return `
+        <div class="mobile-card">
+          <div class="m-card-header">
+            <span class="m-title" style="font-size:13.5px;">${escapeHtml(log.item_name)}</span>
+            ${typeBadge}
+          </div>
+          <div class="m-stats-grid">
+            <div class="m-stat-item">
+              <span class="m-stat-label">Jumlah Mutasi</span>
+              <span class="m-stat-value ${log.type === 'OUT' ? 'danger' : 'primary'}">
+                ${log.type === 'OUT' ? '-' : '+'}${log.quantity}
+              </span>
+            </div>
+            <div class="m-stat-item">
+              <span class="m-stat-label">Sebelum</span>
+              <span class="m-stat-value">${log.previous_stock}</span>
+            </div>
+            <div class="m-stat-item">
+              <span class="m-stat-label">Stok Akhir</span>
+              <span class="m-stat-value primary">${log.current_stock}</span>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:11.5px; color:var(--text-muted); padding-top:4px; border-top:1px dashed #e2e8f0;">
+            <span>Ref: <strong style="font-family:monospace;">${escapeHtml(log.reference_code || '-')}</strong></span>
+            <span>${log.created_at}</span>
+          </div>
+          ${log.notes ? `<div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Ket: ${escapeHtml(log.notes)}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
 }
 
 // ============================================================================
@@ -1649,3 +1937,8 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+// Global Window Exports for Inline Mobile HTML handlers
+window.toggleSidebar = toggleSidebar;
+window.closeSidebar = closeSidebar;
+window.switchTab = switchTab;
