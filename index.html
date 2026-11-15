@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Sistem Manajemen Gudang & Distribusi Logistik</title>
   <link rel="stylesheet" href="styles.css">
   <!-- Chart.js CDN for clean visual dashboard charts -->
@@ -10,20 +10,26 @@
 </head>
 <body>
 
+  <!-- Overlay for Mobile Sidebar Drawer -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
   <!-- ==================== SIDEBAR ==================== -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="app-sidebar">
     <div class="sidebar-header">
-      <div class="brand-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-          <line x1="12" y1="22.08" x2="12" y2="12"></line>
-        </svg>
+      <div class="brand-wrapper">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">WMS & DISTRIBUSI</div>
+          <div class="brand-subtitle">Warehouse Logistics</div>
+        </div>
       </div>
-      <div>
-        <div class="brand-title">WMS & DISTRIBUSI</div>
-        <div class="brand-subtitle">Warehouse Logistics</div>
-      </div>
+      <button class="sidebar-close-btn" onclick="closeSidebar()" aria-label="Tutup Menu">&times;</button>
     </div>
 
     <nav class="sidebar-nav">
@@ -69,7 +75,7 @@
         <span class="pulse-dot"></span>
         <span style="font-weight: 600; color: #cbd5e1;">Gudang Aktif</span>
       </div>
-      <span style="font-size: 11px;">v2.0</span>
+      <span style="font-size: 11px;">v2.0 Mobile</span>
     </div>
   </aside>
 
@@ -78,6 +84,9 @@
     <!-- Top Header -->
     <header class="top-header">
       <div class="header-left">
+        <button class="mobile-menu-toggle" onclick="toggleSidebar()" aria-label="Buka Menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
         <h1 class="page-title" id="page-current-title">Dashboard Gudang & Logistik</h1>
       </div>
       <div class="header-right">
@@ -87,7 +96,8 @@
         </div>
         <button class="btn btn-primary" onclick="openNewDistributionModal()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          Buat Distribusi Baru
+          <span class="desktop-only-inline">Buat Distribusi Baru</span>
+          <span class="mobile-only-inline">+ Kirim</span>
         </button>
       </div>
     </header>
@@ -117,7 +127,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
             </div>
             <div class="stat-details">
-              <div class="stat-label">Total Transaksi Distribusi</div>
+              <div class="stat-label">Total Transaksi</div>
               <div class="stat-value" id="stat-dist-total">0</div>
               <div class="stat-subtitle" id="stat-dist-active">0 dalam pengiriman</div>
             </div>
@@ -128,7 +138,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
             </div>
             <div class="stat-details">
-              <div class="stat-label">Peringatan Stok Menipis</div>
+              <div class="stat-label">Stok Menipis</div>
               <div class="stat-value" id="stat-low-stock">0</div>
               <div class="stat-subtitle" id="stat-out-of-stock">0 item stok habis (0)</div>
             </div>
@@ -151,11 +161,11 @@
           <div class="card">
             <div class="card-header">
               <div class="card-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><pie-chart/><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
                 Komposisi Stok per Kategori
               </div>
             </div>
-            <div class="card-body" style="height: 280px; position: relative;">
+            <div class="card-body" style="height: 260px; position: relative;">
               <canvas id="chart-category"></canvas>
             </div>
           </div>
@@ -167,7 +177,7 @@
                 Status Pengiriman Distribusi
               </div>
             </div>
-            <div class="card-body" style="height: 280px; position: relative;">
+            <div class="card-body" style="height: 260px; position: relative;">
               <canvas id="chart-distribution"></canvas>
             </div>
           </div>
@@ -181,10 +191,12 @@
               Pengiriman Distribusi Terbaru
             </div>
             <button class="btn btn-secondary btn-sm" onclick="switchTab('tab-distribusi')">
-              Lihat Semua Pengiriman &rarr;
+              Lihat Semua &rarr;
             </button>
           </div>
-          <div class="table-responsive">
+
+          <!-- Desktop Table View -->
+          <div class="desktop-only table-responsive">
             <table class="table">
               <thead>
                 <tr>
@@ -203,6 +215,11 @@
               </tbody>
             </table>
           </div>
+
+          <!-- Mobile Cards View -->
+          <div class="mobile-only mobile-cards-container" id="mobile-dashboard-dist">
+            <div class="empty-state"><p>Memuat data distribusi...</p></div>
+          </div>
         </div>
 
         <!-- Low Stock Items Warning -->
@@ -210,13 +227,15 @@
           <div class="card-header">
             <div class="card-title" style="color: var(--danger);">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-              Perhatian: Stok Menipis & Membutuhkan Restock
+              Perhatian: Stok Menipis & Butuh Restock
             </div>
             <button class="btn btn-primary btn-sm" onclick="openRestockModal()">
-              + Tambah Stok Masuk (Restock)
+              + Tambah Stok Masuk
             </button>
           </div>
-          <div class="table-responsive">
+
+          <!-- Desktop Table View -->
+          <div class="desktop-only table-responsive">
             <table class="table">
               <thead>
                 <tr>
@@ -235,6 +254,11 @@
               </tbody>
             </table>
           </div>
+
+          <!-- Mobile Cards View -->
+          <div class="mobile-only mobile-cards-container" id="mobile-dashboard-low-stock">
+            <div class="empty-state"><p>Memuat data stok kritis...</p></div>
+          </div>
         </div>
       </section>
 
@@ -248,18 +272,16 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
               Katalog & Data Stok Barang Gudang
             </div>
-            <div style="display: flex; gap: 8px;">
-              <a href="/api/export/items" class="btn btn-secondary btn-sm" download>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <a href="/api/export/items" class="btn btn-secondary btn-sm desktop-only-inline" download>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                Ekspor Excel/CSV
+                Ekspor Excel
               </a>
               <button class="btn btn-success btn-sm" onclick="openRestockModal()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                Stok Masuk
+                + Stok Masuk
               </button>
               <button class="btn btn-primary btn-sm" onclick="openNewItemModal()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                Tambah Barang Baru
+                + Tambah Barang
               </button>
             </div>
           </div>
@@ -287,7 +309,8 @@
             </div>
           </div>
 
-          <div class="table-responsive">
+          <!-- Desktop Table View -->
+          <div class="desktop-only table-responsive">
             <table class="table">
               <thead>
                 <tr>
@@ -307,6 +330,11 @@
               </tbody>
             </table>
           </div>
+
+          <!-- Mobile Cards View -->
+          <div class="mobile-only mobile-cards-container" id="mobile-items-cards">
+            <div class="empty-state"><p>Memuat data barang...</p></div>
+          </div>
         </div>
       </section>
 
@@ -320,13 +348,12 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
               Riwayat & Data Distribusi Pengiriman Barang
             </div>
-            <div style="display: flex; gap: 8px;">
-              <a href="/api/export/distributions" class="btn btn-secondary btn-sm" download>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <a href="/api/export/distributions" class="btn btn-secondary btn-sm desktop-only-inline" download>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                Ekspor Distribusi (CSV)
+                Ekspor CSV
               </a>
               <button class="btn btn-primary btn-sm" onclick="openNewDistributionModal()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 + Buat Distribusi Baru
               </button>
             </div>
@@ -337,7 +364,7 @@
             <div class="filter-bar">
               <div class="search-input-wrapper">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="filter-dist-search" class="form-control" placeholder="Cari No. Surat Jalan, tujuan, plat nomor, nama driver...">
+                <input type="text" id="filter-dist-search" class="form-control" placeholder="Cari No. Surat Jalan, tujuan, plat, supir...">
               </div>
               <div style="width: 180px;">
                 <select id="filter-dist-status" class="form-select">
@@ -351,7 +378,8 @@
             </div>
           </div>
 
-          <div class="table-responsive">
+          <!-- Desktop Table View -->
+          <div class="desktop-only table-responsive">
             <table class="table">
               <thead>
                 <tr>
@@ -371,6 +399,11 @@
               </tbody>
             </table>
           </div>
+
+          <!-- Mobile Cards View -->
+          <div class="mobile-only mobile-cards-container" id="mobile-distributions-cards">
+            <div class="empty-state"><p>Memuat data pengiriman...</p></div>
+          </div>
         </div>
       </section>
 
@@ -388,7 +421,8 @@
               </div>
               <button class="btn btn-primary btn-sm" onclick="openNewVehicleModal()">+ Tambah Armada</button>
             </div>
-            <div class="table-responsive">
+            
+            <div class="desktop-only table-responsive">
               <table class="table">
                 <thead>
                   <tr>
@@ -405,6 +439,10 @@
                 </tbody>
               </table>
             </div>
+
+            <div class="mobile-only mobile-cards-container" id="mobile-vehicles-cards">
+              <div class="empty-state"><p>Memuat data kendaraan...</p></div>
+            </div>
           </div>
 
           <!-- Master Petugas -->
@@ -416,13 +454,14 @@
               </div>
               <button class="btn btn-primary btn-sm" onclick="openNewOfficerModal()">+ Tambah Petugas</button>
             </div>
-            <div class="table-responsive">
+
+            <div class="desktop-only table-responsive">
               <table class="table">
                 <thead>
                   <tr>
                     <th>Nama Petugas</th>
                     <th>Peran / Posisi</th>
-                    <th>No. Telepon / WhatsApp</th>
+                    <th>No. Telepon / WA</th>
                     <th>Status</th>
                     <th>Aksi</th>
                   </tr>
@@ -431,6 +470,10 @@
                   <tr><td colspan="5" class="text-center py-4">Memuat data petugas...</td></tr>
                 </tbody>
               </table>
+            </div>
+
+            <div class="mobile-only mobile-cards-container" id="mobile-officers-cards">
+              <div class="empty-state"><p>Memuat data petugas...</p></div>
             </div>
           </div>
         </div>
@@ -448,7 +491,8 @@
             </div>
             <button class="btn btn-primary btn-sm" onclick="openNewDestinationModal()">+ Tambah Lokasi Tujuan</button>
           </div>
-          <div class="table-responsive">
+
+          <div class="desktop-only table-responsive">
             <table class="table">
               <thead>
                 <tr>
@@ -465,6 +509,10 @@
               </tbody>
             </table>
           </div>
+
+          <div class="mobile-only mobile-cards-container" id="mobile-destinations-cards">
+            <div class="empty-state"><p>Memuat data tujuan...</p></div>
+          </div>
         </div>
       </section>
 
@@ -479,7 +527,8 @@
               Audit Trail & Riwayat Keluar-Masuk Stok Gudang
             </div>
           </div>
-          <div class="table-responsive">
+
+          <div class="desktop-only table-responsive">
             <table class="table">
               <thead>
                 <tr>
@@ -498,11 +547,43 @@
               </tbody>
             </table>
           </div>
+
+          <div class="mobile-only mobile-cards-container" id="mobile-logs-cards">
+            <div class="empty-state"><p>Memuat log mutasi...</p></div>
+          </div>
         </div>
       </section>
 
     </main>
   </div>
+
+  <!-- ============================================================== -->
+  <!-- MOBILE BOTTOM NAVIGATION BAR                                   -->
+  <!-- ============================================================== -->
+  <nav class="mobile-bottom-nav">
+    <button class="m-nav-item active" data-tab="tab-dashboard" onclick="switchTab('tab-dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+      <span>Beranda</span>
+    </button>
+    <button class="m-nav-item" data-tab="tab-stok" onclick="switchTab('tab-stok')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      <span>Stok</span>
+    </button>
+    <button class="m-nav-item m-nav-highlight" onclick="openNewDistributionModal()" title="Kirim Barang Baru">
+      <div class="m-nav-fab">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      </div>
+      <span style="color: #60a5fa; font-weight: bold;">+ Kirim</span>
+    </button>
+    <button class="m-nav-item" data-tab="tab-distribusi" onclick="switchTab('tab-distribusi')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+      <span>Distribusi</span>
+    </button>
+    <button class="m-nav-item" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      <span>Menu</span>
+    </button>
+  </nav>
 
   <!-- ============================================================== -->
   <!-- MODAL: BUAT DISTRIBUSI BARU                                    -->
@@ -512,7 +593,7 @@
       <div class="modal-header">
         <div class="modal-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-          Buat Surat Jalan & Pengiriman Distribusi Baru
+          Buat Surat Jalan & Distribusi Baru
         </div>
         <button class="modal-close" onclick="closeModal('modal-new-distribution')">&times;</button>
       </div>
@@ -532,16 +613,13 @@
             </div>
           </div>
 
-          <div class="form-row">
-            <!-- Tujuan -->
-            <div class="form-group" style="grid-column: span 2;">
-              <label class="form-label">Tujuan Pengiriman / Cabang / Klien <span class="req">*</span></label>
-              <div style="display: flex; gap: 8px;">
-                <select id="dist-select-destination" class="form-select" onchange="handleSelectDestinationChange(this)" style="flex: 1;">
-                  <option value="">-- Pilih Tujuan Terdaftar atau Ketik Manual --</option>
-                </select>
-                <button type="button" class="btn btn-secondary btn-sm" onclick="openNewDestinationModal()">+ Baru</button>
-              </div>
+          <div class="form-group">
+            <label class="form-label">Tujuan Pengiriman / Cabang / Klien <span class="req">*</span></label>
+            <div style="display: flex; gap: 8px;">
+              <select id="dist-select-destination" class="form-select" onchange="handleSelectDestinationChange(this)" style="flex: 1;">
+                <option value="">-- Pilih Tujuan Terdaftar atau Ketik Manual --</option>
+              </select>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="openNewDestinationModal()">+ Baru</button>
             </div>
           </div>
 
@@ -599,7 +677,7 @@
           </div>
 
           <div id="dist-items-container">
-            <!-- Row-row item akan dimasukkan di sini secara dinamis -->
+            <!-- Row-row item dimasukkan secara dinamis -->
           </div>
 
           <div class="form-group" style="margin-top: 16px;">
@@ -633,14 +711,12 @@
 
       <div class="modal-body">
         <!-- Status Tracker / Quick Switch -->
-        <div style="background-color: #f1f5f9; padding: 12px 16px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: gap;">
+        <div style="background-color: #f1f5f9; padding: 12px 16px; border-radius: var(--radius-md); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
           <div>
-            <span style="font-weight: 600; font-size: 13px;">Status Pengiriman Saat Ini:</span>
-            <span id="view-dist-status-badge" class="badge badge-info" style="margin-left: 8px;">-</span>
+            <span style="font-weight: 600; font-size: 13px;">Status Pengiriman:</span>
+            <span id="view-dist-status-badge" class="badge badge-info" style="margin-left: 6px;">-</span>
           </div>
-          <div style="display: flex; gap: 6px;" id="dist-quick-actions">
-            <!-- Dynamic button actions (Tandai Berangkat, Tandai Selesai, Batalkan) -->
-          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="dist-quick-actions"></div>
         </div>
 
         <!-- PRINTABLE SURAT JALAN -->
@@ -698,21 +774,21 @@
           </div>
 
           <!-- Tabel Barang Surat Jalan -->
-          <table class="sj-table">
-            <thead>
-              <tr>
-                <th style="width: 40px; text-align: center;">No.</th>
-                <th style="width: 140px;">Kode / SKU</th>
-                <th>Nama Barang & Spesifikasi</th>
-                <th style="width: 90px; text-align: right;">Jumlah</th>
-                <th style="width: 80px;">Satuan</th>
-                <th>Keterangan / Posisi</th>
-              </tr>
-            </thead>
-            <tbody id="sj-items-body">
-              <!-- Item rows -->
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="sj-table">
+              <thead>
+                <tr>
+                  <th style="width: 40px; text-align: center;">No.</th>
+                  <th style="width: 140px;">Kode / SKU</th>
+                  <th>Nama Barang & Spesifikasi</th>
+                  <th style="width: 90px; text-align: right;">Jumlah</th>
+                  <th style="width: 80px;">Satuan</th>
+                  <th>Keterangan</th>
+                </tr>
+              </thead>
+              <tbody id="sj-items-body"></tbody>
+            </table>
+          </div>
 
           <!-- Tanda Tangan 3 Pihak -->
           <div class="sj-signatures">
@@ -759,14 +835,12 @@
         <div class="modal-body">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Kode / SKU (Opsional jika ingin otomatis)</label>
+              <label class="form-label">Kode / SKU (Opsional)</label>
               <input type="text" id="item-input-sku" class="form-control" placeholder="Contoh: BRG-ELK-005">
             </div>
             <div class="form-group">
               <label class="form-label">Kategori Barang <span class="req">*</span></label>
-              <select id="item-input-category" class="form-select" required>
-                <!-- Populated via API -->
-              </select>
+              <select id="item-input-category" class="form-select" required></select>
             </div>
           </div>
 
@@ -792,7 +866,7 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Lokasi Rak / Penempatan Gudang</label>
+              <label class="form-label">Lokasi Rak / Gudang</label>
               <input type="text" id="item-input-location" class="form-control" placeholder="Contoh: Rak A-03, Pallet B-02">
             </div>
             <div class="form-group">
@@ -843,7 +917,7 @@
               <input type="number" id="restock-quantity" class="form-control" min="1" required placeholder="Contoh: 50">
             </div>
             <div class="form-group">
-              <label class="form-label">Nomor Referensi / No. PO / Surat Jalan Masuk</label>
+              <label class="form-label">No. Referensi / No. PO / Surat Masuk</label>
               <input type="text" id="restock-reference" class="form-control" placeholder="Contoh: PO-2026-089">
             </div>
           </div>
@@ -913,7 +987,7 @@
       <div class="modal-header">
         <div class="modal-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
-          Daftarkan Armada / Kendaraan Baru
+          Daftarkan Armada Baru
         </div>
         <button class="modal-close" onclick="closeModal('modal-vehicle')">&times;</button>
       </div>
@@ -970,7 +1044,7 @@
       <div class="modal-header">
         <div class="modal-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-          Tambah Petugas / Supir Distribusi
+          Tambah Petugas / Supir
         </div>
         <button class="modal-close" onclick="closeModal('modal-officer')">&times;</button>
       </div>
@@ -992,7 +1066,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Nomor Telepon / WhatsApp <span class="req">*</span></label>
+              <label class="form-label">No. Telepon / WhatsApp <span class="req">*</span></label>
               <input type="text" id="off-input-phone" class="form-control" placeholder="0812-xxxx-xxxx" required>
             </div>
           </div>
@@ -1014,7 +1088,7 @@
       <div class="modal-header">
         <div class="modal-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-          Tambah Tujuan / Cabang Distribusi Baru
+          Tambah Tujuan / Cabang Baru
         </div>
         <button class="modal-close" onclick="closeModal('modal-destination')">&times;</button>
       </div>
